@@ -59,11 +59,14 @@ Vue.component('submission-item', {
 
 <script id="submissionItemTemplate" type="text/x-template">
 <tr>
+  <!---
   <% if (active === 'submissions') { %>
   <td><a :href="submissionLink"><b>#{{ data.info.submissionId }}</b></a></td>
   <% } else { %>
   <td><b>#{{ data.info.submissionId }}</b></td>
   <% } %>
+  --->
+  <td><a :href="submissionLink"><b>#{{ data.info.submissionId }}</b></a></td>
   <td ref="problemLabel"><a ref="problemLabelTextFit" style="width: 230px; height: 22px; display: block; margin: 0 auto; line-height: 22px;" :href="problemLink"><b>#{{ config.inContest ? alpha(data.info.problemId) : data.info.problemId }}.</b> {{ data.info.problemName }}</a></td>
   <% if (active === 'submissions') { %>
   <td><a :href="submissionLink"><b><status-label :status="statusString" :progress="progress"></status-label></b></a></td>

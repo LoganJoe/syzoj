@@ -42,7 +42,7 @@
     "js-yaml": "^3.9.0",
     "jsondiffpatch": "0.2.5",
     "jsonwebtoken": "^8.4.0",
-    "katex": "^0.10.0",
+    "katex": "^0.10.1",
     "mariadb": "^2.0.2-rc",
     "mathjax-node": "^2.1.1",
     "moemark": "^0.3.10",
@@ -65,6 +65,7 @@
     "syzoj-divine": "^1.0.2",
     "tempfile": "^2.0.0",
     "tmp-promise": "^1.0.3",
+    "uuid": "^3.3.2",
     "waliyun": "^3.1.1",
     "winston": "^3.1.0",
     "xss": "^1.0.3"

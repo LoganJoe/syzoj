@@ -1,5 +1,6 @@
 let fs = require('fs'),
     path = require('path');
+const UUID = require('uuid');
 const serializejs = require('serialize-javascript');
 
 const commandLineArgs = require('command-line-args');
@@ -17,6 +18,7 @@ global.syzoj = {
   models: [],
   modules: [],
   db: null,
+  serviceID: UUID(),
   log(obj) {
     console.log(obj);
   },
@@ -71,8 +73,22 @@ global.syzoj = {
     await this.connectDatabase();
     if (!module.parent) {
       await this.lib('judger').connect();
+      app.server = require('http').createServer(app);
     }
     this.loadModules();
+  },
+  restart() {
+    console.log('Will now fork a new process.');
+    const child = require('child_process').fork(__filename, ['-c', options.config]);
+    child.on('message', (message) => {
+      if (message !== 'quit') return;
+
+      console.log('Child process requested "quit".')
+      child.send('quited', err => {
+        if (err) console.error('Error sending "quited" to child process:', err);
+        process.exit();
+      });
+    });
   },
   async connectDatabase() {
     let Sequelize = require('sequelize');
@@ -124,7 +140,7 @@ global.syzoj = {
     global.Promise = Sequelize.Promise;
     this.db.countQuery = async (sql, options) => (await this.db.query(`SELECT COUNT(*) FROM (${sql}) AS \`__tmp_table\``, options))[0][0]['COUNT(*)'];
 
-    this.loadModels();
+    await this.loadModels();
   },
   loadModules() {
     fs.readdir('./modules/', (err, files) => {
@@ -136,7 +152,7 @@ global.syzoj = {
            .forEach((file) => this.modules.push(require(`./modules/${file}`)));
     });
   },
-  loadModels() {
+  async loadModels() {
     fs.readdir('./models/', (err, files) => {
       if (err) {
         this.log(err);
@@ -144,9 +160,8 @@ global.syzoj = {
       }
       files.filter((file) => file.endsWith('.js'))
            .forEach((file) => require(`./models/${file}`));
-
-      this.db.sync();
     });
+    await this.db.sync();
   },
   lib(name) {
     return require(`./libs/${name}`);

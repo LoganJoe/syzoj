@@ -1,3 +1,4 @@
+
 let JudgeState = syzoj.model('judge_state');
 let FormattedCode = syzoj.model('formatted_code');
 let User = syzoj.model('user');
@@ -22,6 +23,7 @@ const displayConfig = {
 // s is JudgeState
 app.get('/submissions', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     const curUser = res.locals.user;
     let user = await User.fromName(req.query.submitter || '');
     let where = {};
@@ -131,19 +133,42 @@ app.get('/submissions', async (req, res) => {
 
 app.get('/submission/:id', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
+
     const id = parseInt(req.params.id);
-    const judge = await JudgeState.fromID(id);
+    let judge = await JudgeState.fromID(id);
     if (!judge) throw new ErrorMessage("提交记录 ID 不正确。");
     const curUser = res.locals.user;
-    if (!await judge.isAllowedVisitBy(curUser)) throw new ErrorMessage('您没有权限进行此操作。');
 
+    const problemID =judge.problem_id;
+    let problem = await Problem.fromID(problemID);
+  //
+        problem.allowedEdit = await problem.isAllowedEditBy(res.locals.user);
+        problem.judge_state = await problem.getJudgeState(res.locals.user, true);
+        problem.tags = await problem.getTags();
+  //
+    let isAC;
+    if((problem.judge_state && problem.judge_state.status === 'Accepted'))
+      isAC = true;
+    else isAC = false;
+
+    if (res.locals.user.id !== judge.user_id && !await judge.isAllowedVisitBy(curUser) && problem.is_public === false) 
+        throw new ErrorMessage('您没有权限进行此操作。');
+        
+    if (res.locals.user.id !== judge.user_id && !await judge.isAllowedVisitBy(curUser) && isAC !== true) 
+        throw new ErrorMessage('error:您还没有AC这道题，无权查看他人代码。');
+
+    //if(res.locals.user.id !== judge.user_id && res.locals.user.id === 6)  throw new ErrorMessage('Go shit');
+
+	//if(res.locals.user != judge.user_id  && !await res.locals.user.hasPrivilege('code_viewer') && !res.locals.user.is_admin) throw new ErrorMessage('您无权查看他人代码。');
+
+	//if(res.locals.user != judge.user_id  && !(await res.locals.user.hasPrivilege('code_viewer') || res.locals.user.is_admin || isAC)) throw new ErrorMessage('您还没有AC这道题，无权查看他人代码。');
     let contest;
     if (judge.type === 1) {
       contest = await Contest.fromID(judge.type_info);
       contest.ended = contest.isEnded();
-
       if ((!contest.ended || !contest.is_public) &&
-        !(await judge.problem.isAllowedEditBy(res.locals.user) || await contest.isSupervisior(curUser))) {
+        !(await contest.isSupervisior(curUser))) {
         throw new Error("比赛未结束或未公开。");
       }
     }
@@ -167,7 +192,6 @@ app.get('/submission/:id', async (req, res) => {
       }
       judge.code = await syzoj.utils.highlight(judge.code, syzoj.languages[judge.language].highlight);
     }
-
     displayConfig.showRejudge = await judge.problem.isAllowedEditBy(res.locals.user);
     res.render('submission', {
       info: getSubmissionInfo(judge, displayConfig),

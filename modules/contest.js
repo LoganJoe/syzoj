@@ -1,6 +1,8 @@
 let Contest = syzoj.model('contest');
 let ContestRanklist = syzoj.model('contest_ranklist');
 let ContestPlayer = syzoj.model('contest_player');
+let ContestRanklist2 = syzoj.model('contest_ranklist2');
+let ContestPlayer2 = syzoj.model('contest_player2');
 let Problem = syzoj.model('problem');
 let JudgeState = syzoj.model('judge_state');
 let User = syzoj.model('user');
@@ -9,11 +11,21 @@ const jwt = require('jsonwebtoken');
 const { getSubmissionInfo, getRoughResult, processOverallResult } = require('../libs/submissions_process');
 
 app.get('/contests', async (req, res) => {
-  try {
-    let where;
-    if (res.locals.user && res.locals.user.is_admin) where = {}
-    else where = { is_public: true };
 
+  try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
+    let Assort = req.query.assort;
+    let where;
+    if (res.locals.user && res.locals.user.is_admin)
+    {
+      if(Assort !== 0 && Assort !== undefined) where = { assort: Assort };
+      else where = {}
+    }
+    else
+    {
+      if(Assort !== 0 && Assort !== undefined) where = {is_public: true, assort: Assort };
+      else where = { is_public: true };
+    }
     let paginate = syzoj.utils.paginate(await Contest.count(where), req.query.page, syzoj.config.page.contest);
     let contests = await Contest.query(paginate, where, [['start_time', 'desc']]);
 
@@ -32,7 +44,9 @@ app.get('/contests', async (req, res) => {
 });
 
 app.get('/contest/:id/edit', async (req, res) => {
+
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
 
     let contest_id = parseInt(req.params.id);
@@ -43,7 +57,7 @@ app.get('/contest/:id/edit', async (req, res) => {
     } else {
       await contest.loadRelationships();
     }
-
+    contest.file_io = false;
     let problems = [], admins = [];
     if (contest.problems) problems = await contest.problems.split('|').mapAsync(async id => await Problem.fromID(id));
     if (contest.admins) admins = await contest.admins.split('|').mapAsync(async id => await User.fromID(id));
@@ -67,29 +81,41 @@ app.post('/contest/:id/edit', async (req, res) => {
 
     let contest_id = parseInt(req.params.id);
     let contest = await Contest.fromID(contest_id);
-    let ranklist = null;
+	let ranklist = null;
+   // let ranklist2 = null;
     if (!contest) {
       contest = await Contest.create();
 
       contest.holder_id = res.locals.user.id;
 
       ranklist = await ContestRanklist.create();
-
+    //  ranklist2 = await ContestRanklist2.create();
       // Only new contest can be set type
       if (!['noi', 'ioi', 'acm'].includes(req.body.type)) throw new ErrorMessage('无效的赛制。');
       contest.type = req.body.type;
     } else {
       await contest.loadRelationships();
       ranklist = contest.ranklist;
+      //ranklist2 = contest.ranklist2;
     }
 
     try {
       ranklist.ranking_params = JSON.parse(req.body.ranking_params);
+     // ranklist2.ranking_params = JSON.parse(req.body.ranking_params);
     } catch (e) {
       ranklist.ranking_params = {};
+	//ranklist2.ranking_params = {};
     }
     await ranklist.save();
+   // await ranklist2.save();
+
+    
+    if (!['0', '1', '2', '3'].includes(req.body.assort)) throw new ErrorMessage('无效的分类。', req.body.assort);
+    let Assort = req.body.assort;
+    contest.assort = Assort;
+
     contest.ranklist_id = ranklist.id;
+	  contest.ranklist_id = ranklist.id;
 
     if (!req.body.title.trim()) throw new ErrorMessage('比赛名不能为空。');
     contest.title = req.body.title;
@@ -105,7 +131,32 @@ app.post('/contest/:id/edit', async (req, res) => {
     contest.hide_statistics = req.body.hide_statistics === 'on';
 
     await contest.save();
-
+    
+    if(contest.type === 'noi' && req.body.file_io) 
+    {
+		let problems_id = await contest.getProblems();
+		let problems = await problems_id.mapAsync(async id => await Problem.fromID(id));
+		for(let p of problems)
+		{
+			let problem = await Problem.fromID(p.id);
+			problem.file_io = 1;
+			if(!problem.file_io_input_name.trim() || problem.file_io_input_name === null)
+				problem.file_io_input_name = 'test.in';
+			if(!problem.file_io_output_name.trim() || problem.file_io_output_name === null)
+        problem.file_io_output_name = 'test.out';
+      if(problem.is_public) 
+      {
+        problem.is_public = false;
+        problem.publicizer_id = res.locals.user.id;
+        problem.publicize_time = new Date();
+      }
+      await problem.save();
+      JudgeState.model.update(
+        { is_public: false },
+        { where: { problem_id: problem.id } }
+      );
+		}
+    }
     res.redirect(syzoj.utils.makeUrl(['contest', contest.id]));
   } catch (e) {
     syzoj.log(e);
@@ -115,8 +166,46 @@ app.post('/contest/:id/edit', async (req, res) => {
   }
 });
 
+app.post('/contest/:id/end', async (req, res) => {
+	try {
+	  if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
+	  let contest_id = parseInt(req.params.id);
+	  let contest = await Contest.fromID(contest_id);
+	  
+	  if(contest.type === 'noi') 
+	  {
+		  let problems_id = await contest.getProblems();
+		  let problems = await problems_id.mapAsync(async id => await Problem.fromID(id));
+		  for(let p of problems)
+		  {
+			  let problem = await Problem.fromID(p.id);
+        problem.file_io = false;
+        if(!problem.is_public) 
+        {
+          problem.is_public = true;
+          problem.publicizer_id = res.locals.user.id;
+          problem.publicize_time = new Date();
+        }
+        JudgeState.model.update (
+          { is_public: true },
+          { where: { problem_id: problem.id } }
+        );
+			  await problem.save();
+		  }
+	  }
+
+	  res.redirect(syzoj.utils.makeUrl(['contest', contest.id]));
+	} catch (e) {
+	  syzoj.log(e);
+	  res.render('error', {
+		err: e
+	  });
+	}
+  });
+
 app.get('/contest/:id', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     const curUser = res.locals.user;
     let contest_id = parseInt(req.params.id);
 
@@ -221,6 +310,7 @@ app.get('/contest/:id', async (req, res) => {
 
 app.get('/contest/:id/ranklist', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     let contest_id = parseInt(req.params.id);
     let contest = await Contest.fromID(contest_id);
     const curUser = res.locals.user;
@@ -279,6 +369,67 @@ app.get('/contest/:id/ranklist', async (req, res) => {
   }
 });
 
+app.get('/contest/:id/ranklist2', async (req, res) => {
+  try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
+    let contest_id = parseInt(req.params.id);
+    let contest = await Contest.fromID(contest_id);
+    const curUser = res.locals.user;
+
+    if (!contest) throw new ErrorMessage('无此比赛。');
+    if (!contest.is_public && (!res.locals.user || !res.locals.user.is_admin)) throw new ErrorMessage('比赛未公开，请耐心等待 (´∀ `)');
+    if ([contest.allowedSeeingResult() && contest.allowedSeeingOthers(),
+    contest.isEnded(),
+    await contest.isSupervisior(curUser)].every(x => !x))
+      throw new ErrorMessage('您没有权限进行此操作。');
+
+    await contest.loadRelationships();
+
+    let players_id = [];
+    for (let i = 1; i <= contest.ranklist.ranklist.player_num; i++) players_id.push(contest.ranklist.ranklist[i]);
+
+    let ranklist = await players_id.mapAsync(async player_id => {
+      let player = await ContestPlayer.fromID(player_id);
+
+      if (contest.type === 'noi' || contest.type === 'ioi') {
+        player.score = 0;
+      }
+
+      for (let i in player.score_details) {
+        player.score_details[i].judge_state = await JudgeState.fromID(player.score_details[i].judge_id);
+
+        /*** XXX: Clumsy duplication, see ContestRanklist::updatePlayer() ***/
+        if (contest.type === 'noi' || contest.type === 'ioi') {
+          let multiplier = contest.ranklist.ranking_params[i] || 1.0;
+          player.score_details[i].weighted_score = player.score_details[i].score == null ? null : Math.round(player.score_details[i].score * multiplier);
+          player.score += player.score_details[i].weighted_score;
+        }
+      }
+
+      let user = await User.fromID(player.user_id);
+
+      return {
+        user: user,
+        player: player
+      };
+    });
+
+    let problems_id = await contest.getProblems();
+    let problems = await problems_id.mapAsync(async id => await Problem.fromID(id));
+
+    res.render('contest_ranklist2', {
+      contest: contest,
+      ranklist: ranklist,
+      problems: problems
+    });
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    });
+  }
+});
+
 function getDisplayConfig(contest) {
   return {
     showScore: contest.allowedSeeingScore(),
@@ -295,6 +446,7 @@ function getDisplayConfig(contest) {
 
 app.get('/contest/:id/submissions', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     let contest_id = parseInt(req.params.id);
     let contest = await Contest.fromID(contest_id);
     if (!contest.is_public && (!res.locals.user || !res.locals.user.is_admin)) throw new ErrorMessage('比赛未公开，请耐心等待 (´∀ `)');
@@ -355,6 +507,8 @@ app.get('/contest/:id/submissions', async (req, res) => {
     where.type = 1;
     where.type_info = contest_id;
 
+    let isFiltered = !!(where.problem_id || where.user_id || where.score || where.language || where.status);
+
     let paginate = syzoj.utils.paginate(await JudgeState.count(where), req.query.page, syzoj.config.page.judge_state);
     let judge_state = await JudgeState.query(paginate, where, [['submit_time', 'desc']]);
 
@@ -380,7 +534,8 @@ app.get('/contest/:id/submissions', async (req, res) => {
       paginate: paginate,
       form: req.query,
       displayConfig: displayConfig,
-      pushType: pushType
+      pushType: pushType,
+      isFiltered: isFiltered
     });
   } catch (e) {
     syzoj.log(e);
@@ -393,11 +548,27 @@ app.get('/contest/:id/submissions', async (req, res) => {
 
 app.get('/contest/submission/:id', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     const id = parseInt(req.params.id);
     const judge = await JudgeState.fromID(id);
     if (!judge) throw new ErrorMessage("提交记录 ID 不正确。");
     const curUser = res.locals.user;
     if ((!curUser) || judge.user_id !== curUser.id) throw new ErrorMessage("您没有权限执行此操作。");
+    
+    const problemID =judge.problem_id;
+    let problem = await Problem.fromID(problemID);
+  //
+        problem.allowedEdit = await problem.isAllowedEditBy(res.locals.user);
+        problem.judge_state = await problem.getJudgeState(res.locals.user, true);
+        problem.tags = await problem.getTags();
+  //
+    
+    let isAC;
+    if((problem.judge_state && problem.judge_state.status === 'Accepted'))
+      isAC = true;
+    else isAC = false;
+    if (res.locals.user.id !== judge.user_id && !await judge.isAllowedVisitBy(curUser) && isAC !== true) 
+        throw new ErrorMessage('error:您还没有AC这道题，无权查看他人代码。');
 
     if (judge.type !== 1) {
       return res.redirect(syzoj.utils.makeUrl(['submission', id]));
@@ -418,20 +589,23 @@ app.get('/contest/submission/:id', async (req, res) => {
       judge.codeLength = judge.code.length;
       judge.code = await syzoj.utils.highlight(judge.code, syzoj.languages[judge.language].highlight);
     }
-
+   
     res.render('submission', {
       info: getSubmissionInfo(judge, displayConfig),
-      roughResult: getRoughResult(judge, displayConfig),
+      roughResult: getRoughResult(judge, displayConfig, false),
       code: (displayConfig.showCode && judge.problem.type !== 'submit-answer') ? judge.code.toString("utf8") : '',
+      formattedCode: judge.formattedCode ? judge.formattedCode.toString("utf8") : null,
+      preferFormattedCode: res.locals.user ? res.locals.user.prefer_formatted_code : false,
       detailResult: processOverallResult(judge.result, displayConfig),
-      socketToken: (displayConfig.showDetailResult && judge.pending && x.task_id != null) ? jwt.sign({
+      socketToken: (displayConfig.showDetailResult && judge.pending && judge.task_id != null) ? jwt.sign({
         taskId: judge.task_id,
-        displayConfig: displayConfig,
-        type: 'detail'
+        type: 'detail',
+        displayConfig: displayConfig
       }, syzoj.config.session_secret) : null,
       displayConfig: displayConfig,
       contest: contest,
     });
+    
   } catch (e) {
     syzoj.log(e);
     res.render('error', {
@@ -442,6 +616,7 @@ app.get('/contest/submission/:id', async (req, res) => {
 
 app.get('/contest/:id/problem/:pid', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     let contest_id = parseInt(req.params.id);
     let contest = await Contest.fromID(contest_id);
     if (!contest) throw new ErrorMessage('无此比赛。');
@@ -457,6 +632,9 @@ app.get('/contest/:id/problem/:pid', async (req, res) => {
     await problem.loadRelationships();
 
     contest.ended = contest.isEnded();
+
+    if(contest.ended === true && problem.is_public === false && !curUser.is_admin) throw new ErrorMessage('题目未开放或有比赛正在使用此题目。');
+
     if (!await contest.isSupervisior(curUser) && !(contest.isRunning() || contest.isEnded())) {
       if (await problem.isAllowedUseBy(res.locals.user)) {
         return res.redirect(syzoj.utils.makeUrl(['problem', problem_id]));
@@ -491,6 +669,7 @@ app.get('/contest/:id/problem/:pid', async (req, res) => {
 
 app.get('/contest/:id/:pid/download/additional_file', async (req, res) => {
   try {
+if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录': syzoj.utils.makeUrl(['login'], { 'url': req.originalUrl }) });
     let id = parseInt(req.params.id);
     let contest = await Contest.fromID(id);
     if (!contest) throw new ErrorMessage('无此比赛。');

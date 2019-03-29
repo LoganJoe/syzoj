@@ -256,6 +256,45 @@ app.get('/admin/other', async (req, res) => {
   }
 });
 
+app.get('/katex', async (req, res) => {
+  try {
+    if (!res.locals.user) throw new ErrorMessage('您没有权限进行此操作。');
+
+    res.render('katex');
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    })
+  }
+});
+
+app.get('/game', async (req, res) => {
+  try {
+    if (!res.locals.user) throw new ErrorMessage('您没有权限进行此操作。');
+
+    res.render('game');
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    })
+  }
+});
+
+app.get('/graph_editor', async (req, res) => {
+  try {
+    if (!res.locals.user) throw new ErrorMessage('您没有权限进行此操作。');
+
+    res.redirect('https://csacademy.com/app/graph_editor/');
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    })
+  }
+});
+
 app.get('/admin/rejudge', async (req, res) => {
   try {
     if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
@@ -275,7 +314,6 @@ app.get('/admin/rejudge', async (req, res) => {
 app.post('/admin/other', async (req, res) => {
   try {
     if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
-
     if (req.body.type === 'reset_count') {
       const problems = await Problem.query();
       for (const p of problems) {
@@ -294,7 +332,31 @@ app.post('/admin/other', async (req, res) => {
           await s.save();
         }
       }
-    } else {
+    } 	else if (req.body.type === 'reset_problem')
+	{
+		const problems = await Problem.query();
+	      for (const p of problems) {
+		await p.resetProblem();
+	      }
+	}
+	else if (req.body.type === 'reset_timelimit')
+	{
+		const problems = await Problem.query();
+	      for (const p of problems) {
+		await p.resetTimeLimit();
+	      }
+	}
+	else if(req.body.type === 'reset_submittime')
+	{
+		const submissions = await JudgeState.query();
+      	for (const s of submissions) 
+		{
+			if(s.id < 128000) 
+				s.total_time = s.total_time +s.total_time/2;
+			await s.save();
+		}
+	}
+else {
       throw new ErrorMessage("操作类型不正确");
     }
 
@@ -442,3 +504,34 @@ app.post('/admin/raw', async (req, res) => {
     })
   }
 });
+app.post('/admin/restart', async (req, res) => {
+  try {
+    if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
+    syzoj.restart();
+
+    res.render('admin_restart', {
+      data: JSON.stringify(syzoj.config, null, 2)
+    });
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    })
+  }
+});
+
+app.get('/admin/serviceID', async (req, res) => {
+  try {
+    if (!res.locals.user || !res.locals.user.is_admin) throw new ErrorMessage('您没有权限进行此操作。');
+
+    res.send({
+        serviceID: syzoj.serviceID
+    });
+  } catch (e) {
+    syzoj.log(e);
+    res.render('error', {
+      err: e
+    })
+  }
+});
+

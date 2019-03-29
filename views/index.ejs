@@ -75,6 +75,7 @@
         </table>
       </div>
     </div>
+
     <div class="right floated five wide column">
         <h4 class="ui top attached block header"><i class="ui quote left icon"></i>一言（ヒトコト）</h4>
         <div class="ui bottom attached center aligned segment">
@@ -92,80 +93,36 @@
           <div style="font-size: 1em; line-height: 1.5em; display: none; " id="hitokoto-content"></div>
           <div style="text-align: right; margin-top: 15px; font-size: 0.9em; color: #666; display: none; " id="hitokoto-from"></div>
         </div>
-      <h4 class="ui top attached block header"><i class="ui rss icon"></i>最近更新</h4>
-      <div class="ui bottom attached segment">
-	<table class="ui very basic center aligned table">
-          <thead>
-            <tr>
-              <th width="70%">题目</th>
-              <th width="30%">更新时间</th>
-            </tr>
-	  </thead>
-	  <tbody>
-	    <%
-	    for (let problem of problems) {
-	    %>
-	    <tr>
-	      <td><a href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>"><%= problem.title %></a></td>
-	      <td><%= problem.time %></td>
-	    </tr>
-	    <% } %>
-	  </tbody>
-	</table>
-      </div>
-        <%
-        if (fortune) {
-            let color;
-            if (fortune.fortune.indexOf('吉') != -1) color = '#0ccf00';
-            else if (fortune.fortune.indexOf('凶') != -1) color = '#f25e65';
-            else color = '#444';
-        %>
-        <h4 class="ui top attached block header"><i class="ui magic icon"></i>今日运势</h4>
+
+        <h4 class="ui top attached block header"><i class="ui rss icon"></i>最近更新</h4>
         <div class="ui bottom attached segment">
-            <div style="height: 15px; "></div>
-            <div class="ui two column center aligned padded grid">
-                <div class="one column row">
-                    <div style="text-align: center; ">
-                        <div style="color: <%= color %>; font-size: 49px;"><%- (user.sex == -1 ? '♀ ' : '♂ ') + fortune.fortune + (user.sex == 1 ? ' <span style="transform: scaleX(-1); display: inline-block; ">♂</span>' : ' ♀') %></div>
-                    </div>
-                </div>
-                <div class="two column row">
-                    <div class="column">
-                        <div style="color: #0ccf00; ">
-                            <% if (fortune.good.length) { %>
-                            <strong>宜：</strong><%= fortune.good[0].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.good[0].detail %></span>
-                            <div style="margin-top: 10px; "></div>
-                            <strong>宜：</strong><%= fortune.good[1].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.good[1].detail %></span>
-                            <% } else { %>
-                            <strong>诸事不宜<br>
-                            </strong>
-                            <% } %>
-                        </div>
-                    </div>
-                    <div class="column">
-                        <div style="color: #f25e65; ">
-                            <% if (fortune.bad.length) { %>
-                            <strong>忌：</strong><%= fortune.bad[0].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.bad[0].detail %></span>
-                            <div style="margin-top: 10px; "></div>
-                            <strong>忌：</strong><%= fortune.bad[1].title %>
-                            <br>
-                            <span style="color: #888; font-size: 0.7em; "><%= fortune.bad[1].detail %></span>
-                            <% } else { %>
-                            <strong>万事皆宜<br>
-                            </strong>
-                            <% } %>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <% } %>
+          <table class="ui very basic center aligned table">
+            <thead>
+              <tr>
+                <th width="70%">题目</th>
+                <th width="30%">更新时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              <%
+                for (let problem of problems) {
+                %>
+                <tr>
+                  <td><a href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>"><%= problem.title %></a></td>
+                  <td><%= problem.time %></td>
+                </tr>
+              <% } %>
+            </tbody>
+            </table>
+          </div>
+      <h4 class="ui top attached block header"><i class="ui rss icon"></i>使用说明</h4>
+      <div class="ui bottom attached segment">
+	<p>本OJ基于syzoj3开发而来。改动部分见“changelog”。
+	<p>本OJ需要登录才能使用。注册验证码请联系管理员。对于已有用户，第一次登录需要找回密码。由于端口映射限制，通过外网找回密码时要在找回密码链接中，在IP地址后手动补充端口号:8018。
+	<p>请注意每道题的参数，例如时空限制，题目类型，是否文件IO等。以免造成不必要的提交。
+	<p>OJ运行于Intel&reg; Cure i5-4590 @ 3.20GHz, 内存8G。
+      </div>
+      
       <h4 class="ui top attached block header"><i class="ui search icon"></i>搜索题目</h4>
       <div class="ui bottom attached segment">
         <form action="<%= syzoj.utils.makeUrl(['problems', 'search']) %>" method="get">

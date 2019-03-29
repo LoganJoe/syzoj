@@ -36,6 +36,9 @@ function getIcon(filename) {
 %>
 <% include header %>
 <div class="padding">
+  <h3 class="ui header">
+        #<%= problem.id %>. <%= problem.title %> 测试数据
+    </h3>
   <div class="ui grid">
     <div class="seven wide column">
       <h3 style="text-align: center; ">测试点信息</h3>
@@ -56,7 +59,7 @@ function getIcon(filename) {
             </tr>
           </thead>
           <tbody>
-            <% if (testdata.zip) { %>
+            <% if (testdata.zip && problem.allowedEdit) { %>
             <tr>
               <td class="left aligned"><i class="file archive outline icon"></i> 完整数据包</td>
               <td><%- !testdata.zip.size ? '<i class="minus icon"></i>' : syzoj.utils.formatSize(testdata.zip.size) %></td>

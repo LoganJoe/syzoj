@@ -1,0 +1,30 @@
+<% this.title = 'Edit ToDo'; %>
+<% include header %>
+<div class="padding">
+  <form class="ui form" action="<%= syzoj.utils.makeUrl(['todo', req.params.id, 'edit']) %>" method="post">
+<div class="ui middle aligned center aligned grid">
+  <div class="row">
+    <div class="column" style="max-width: 800px">
+<div class="ui existing segment">
+      <div class="field">
+          <label>题目编号</label>
+          <input type="text" id="pid" name="pid" value="<%= todo_list.problem_id ? todo_list.problem_id : '' %>">
+      </div>
+      <div class="field">
+          <label>描述</label>
+          <input type="text" id="desciption" name="desciption" value="<%= todo_list.desciption ? todo_list.desciption : '' %>">
+      </div>
+    </div>
+</div>
+</div>
+</div>
+
+</br>
+      <div style="text-align: center; ">
+      <button type="submit" class="ui labeled submit icon button">
+        <i class="icon edit"></i> 提交
+      </button>
+      </div>
+  </form>
+</div>
+<% include footer %>

@@ -106,13 +106,24 @@ class JudgeState extends Model {
     await this.loadRelationships();
 
     if (user && user.id === this.problem.user_id) return true;
-    else if (this.type === 0) return this.problem.is_public || (user && (await user.hasPrivilege('manage_problem')));
+    else if (this.type === 0) 
+    {
+      if(user && user.is_admin === true) return true;
+      if(this.problem.is_public === false) return false;
+      if(user && (await user.hasPrivilege('manage_problem'))) return true;
+      if(user && (await user.hasPrivilege('code_viewer'))) return true;
+      return false;
+    }
     else if (this.type === 1) {
       let contest = await Contest.fromID(this.type_info);
       if (contest.isRunning()) {
         return user && await contest.isSupervisior(user);
       } else {
-        return true;
+        if(user && user.is_admin === true) return true;
+      if(this.problem.is_public === false) return false;
+      if(user && (await user.hasPrivilege('manage_problem'))) return true;
+      if(user && (await user.hasPrivilege('code_viewer'))) return true;
+      return false;
       }
     }
   }
@@ -196,3 +207,4 @@ class JudgeState extends Model {
 JudgeState.model = model;
 
 module.exports = JudgeState;
+

@@ -209,6 +209,7 @@ let model = db.define('problem', {
   output_format: { type: Sequelize.TEXT },
   example: { type: Sequelize.TEXT },
   limit_and_hint: { type: Sequelize.TEXT },
+  problem_source: { type: Sequelize.STRING(100) },
 
   time_limit: { type: Sequelize.INTEGER },
   memory_limit: { type: Sequelize.INTEGER },
@@ -242,6 +243,9 @@ let model = db.define('problem', {
       {
         fields: ['publicize_time'],
       },
+      {
+        fields: ['problem_source'],
+      },
     ]
   });
 
@@ -259,7 +263,7 @@ class Problem extends Model {
       output_format: '',
       example: '',
       limit_and_hint: '',
-
+      problem_source: '',
       time_limit: syzoj.config.default.problem.time_limit,
       memory_limit: syzoj.config.default.problem.memory_limit,
 
@@ -284,9 +288,15 @@ class Problem extends Model {
   async isAllowedEditBy(user) {
     if (!user) return false;
     if (await user.hasPrivilege('manage_problem')) return true;
+    //if (await user.hasPrivilege('manage_problem_tag')) return true;
     return this.user_id === user.id;
   }
-
+  async isAllowedEdittagBy(user) {
+    if (!user) return false;
+    if (await user.hasPrivilege('manage_problem')) return true;
+    if (await user.hasPrivilege('manage_problem_tag')) return true;
+    return this.user_id === user.id;
+  }
   async isAllowedUseBy(user) {
     if (this.is_public) return true;
     if (!user) return false;
@@ -487,6 +497,26 @@ class Problem extends Model {
     });
   }
 
+async isAccepted(user) {
+    if (!user) return null;
+    let JudgeState = syzoj.model('judge_state');
+
+    let where = {
+      user_id: user.id,
+      problem_id: this.id,
+	  status: 'Accepted'
+    };
+
+
+      let state = await JudgeState.findOne({
+        where: where,
+        order: [['submit_time', 'desc']]
+      });
+
+      if (state) return true;
+	return false;
+  }
+
   async resetSubmissionCount() {
     let JudgeState = syzoj.model('judge_state');
     await syzoj.utils.lock(['Problem::resetSubmissionCount', this.id], async () => {
@@ -495,6 +525,24 @@ class Problem extends Model {
       await this.save();
     });
   }
+async resetProblem(){
+	if(this.time_limit <= 10) 
+		this.time_limit = this.time_limit * 1000;
+
+	//var description = this.description;
+	//description = description.replace(/(\n)/g, "");  
+	//description = description.replace(/(\t)/g, "");  
+	//description = description.replace(/(\r)/g, "");  
+	//description = description.replace(/<\/?[^>]*>/g, "");  
+	//description = description.replace(/\s*/g, "");
+	//this.description = description;
+	await this.save();
+}
+async resetTimeLimit(){
+	if(this.time_limit <= 10) 
+		this.time_limit = this.time_limit + this.time_limit/2;
+	await this.save();
+}
 
   // type: fastest / slowest / shortest / longest / earliest
   async countStatistics(type) {
@@ -568,7 +616,24 @@ class Problem extends Model {
     });
 
     res.sort((a, b) => {
-      return a.color > b.color ? 1 : -1;
+      let valuea = 0, valueb = 0;
+      if (a.color === 'purple') valuea = 1;
+      if (a.color === 'violet') valuea = 2;
+      if (a.color === 'blue') valuea = 3;
+      if (a.color === 'teal') valuea = 4;
+      if (a.color === 'orange') valuea = 5;
+      if (a.color === 'yellow') valuea = 6;
+
+      if (b.color === 'purple') valueb = 1;
+      if (b.color === 'violet') valueb = 2;
+      if (b.color === 'blue') valueb = 3;
+      if (b.color === 'teal') valueb = 4;
+      if (b.color === 'orange') valueb = 5;
+      if (b.color === 'yellow') valueb = 6;
+      if (valuea !== 0 && valueb !== 0) return valuea < valueb ? -1 : 1;
+      if (valuea === 0 && valueb === 0) return a.color > b.color ? 1 : -1;
+      if (valuea !== 0) return 1;
+      if (valueb !== 0) return -1;
     });
 
     return res;

@@ -1,0 +1,104 @@
+<% this.title = 'ToDo' %>
+<% include header %>
+<%
+let tagIDs = [];
+if (typeof tags !== 'undefined') tagIDs = tags.map(x => x.id);
+%>
+<div class="padding">
+  <div style="margin-bottom: 30px; ">
+    <% include page %>
+  </div>
+  <div class="ui grid" style="margin-bottom: 10px; ">
+    <div class="row" style="white-space: nowrap; ">
+      <div class="six wide column">
+          <a style="margin-left: 10px; " href = "<%= syzoj.utils.makeUrl(['todo', '0', 'edit']) %>" class="circular ui icon blue button">
+              <i class="icon plus"></i>  添加一条TODO
+          </a>
+      </div>
+    </div>
+  </div>
+  <table class="ui very basic center aligned table">
+    <thead>
+      <tr>
+        <% if (user) { %>
+        <th class="one wide">提交状态</th>
+        <% } %>
+        <th class="one wide">编号</th>
+        <th class="left aligned">题目名称</th>
+	<th class="four wide">描述</th>
+        <th class="one wide">通过</th>
+        <th class="one wide">提交</th>
+        <th class="one wide">通过率</th>
+        <th class="one wide">edit</th>
+        <th class="one wide">delete</th>
+      </tr>
+    </thead>
+    <tbody>
+    <% for (let problem of problems) { %>
+        <% if (problem.is_public || problem.allowedEdit) { %>
+        <tr style="height: 44px; ">
+            <% if (user) { %>
+                <td>
+                <% if (problem.judge_state) { %>
+                  <a href="<%= syzoj.utils.makeUrl(['submission', problem.judge_state.id]) %>">
+                    <span class="status <%= problem.judge_state.status.toLowerCase().split(' ').join('_') %>">
+                      <i class="<%= icon[problem.judge_state.status] || 'remove' %> icon"></i>
+                    </span>
+                  </a>
+                <% } %>
+                </td>
+            <% } %>
+            <td><b><%= problem.id %></b></td>
+            <td class="left aligned">
+              <a style="vertical-align: middle; " href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>"><%= problem.title %>
+                <% if (!problem.is_public) { %>
+                  <span class="ui header"><span class="ui tiny red label">未公开</span></span>
+                  <% } %>
+              </a>
+            </td>
+            <td><%= problem.desc %></td>
+            <td><%= problem.ac_num %></td>
+            <td><%= problem.submit_num %></td>
+            <td><%= problem.submit_num != 0 ? (((problem.ac_num / problem.submit_num * 100) || 0).toFixed(2) + '%') : '-' %></td>
+            <td>
+              <a href = "<%= syzoj.utils.makeUrl(['todo', problem.sourceid, 'edit']) %>" class="circular ui icon button">
+                <i class="icon setting icon"></i>
+              </a>
+            </td>
+            <td>
+              <a href-post = "<%= syzoj.utils.makeUrl(['todo', problem.sourceid, 'remove']) %>" class="circular ui icon button">
+                <i class="icon trash alternate icon"></i>
+              </a>
+            </td>
+        </tr>
+        <% } %>
+    <% } %>
+    </tbody>
+  </table><br>
+  <% include page  %>
+<script>
+document.addEventListener('keydown', function (event) {
+  if (event.keyCode === 39) document.getElementById('page_next').click();
+  else if (event.keyCode === 37) document.getElementById('page_prev').click();
+});
+
+$(function () {
+  $('#add_problem_dropdown').dropdown();
+});
+</script>
+<script>
+$(function () {
+  $('.ui.search').search({
+    debug: true,
+    apiSettings: {
+      url: '/api/v2/search/problems/{query}',
+      cache: false
+    },
+    fields: {
+      title: 'name'
+    }
+  });
+});
+</script>
+</div>
+<% include footer %>

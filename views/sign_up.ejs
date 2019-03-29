@@ -1,5 +1,4 @@
 <% this.title = '注册' %>
-<% this.noPreserveUrl = true; %>
 <% include header %>
 <div class="padding">
   <h1>注册</h1>
@@ -25,6 +24,10 @@
                       <input type="password" placeholder="" id="password2">
                     </div>
                 </div>
+		<div class="field">
+                    <label for="ui header">验证码</label>
+                    <input type="text" placeholder="" id="passcode">
+                </div>
                 <a id="sign_up" class="ui button" href="javascript:submit();">注册</a>
             </form>
 </div>
@@ -49,10 +52,15 @@ function mail_required() {
 }
 
 function submit() {
+	if ($("#passcode").val() != "ssoiwinwin") {
+		show_error("验证码错误");
+		return;
+	    }
     if ($("#password1").val() != $("#password2").val()) {
         show_error("两次输入的密码不一致");
         return;
     }
+	
     password = md5($("#password1").val() + "syzoj2_xxx")
     $("#sign_up").addClass("loading");
     $.ajax({

@@ -1,5 +1,136 @@
+
 <% this.title = '编辑题目'; %>
 <% include header %>
+<!--
+    <link href="/editer.md/css/editormd.css" rel="stylesheet">
+    <script src="/editer.md/jquery.min.js"></script>
+    <script src="/editer.md/editormd.min.js"></script>
+    <script type="text/javascript">
+      $(function() {
+          var testEditor1 = editormd("test-editormd1", {
+              width: "100%",
+              height: 380,
+              //autoHeight : true,
+              markdown : "",
+              path : '/editer.md/lib/',
+              imageUpload : true,
+              imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+              imageUploadURL : "/upload/picture",
+	      htmlDecode : "style,script,iframe|on*",
+              emoji: true,
+              taskList: true, 
+              tocm: true,         // Using [TOCM]
+              tex: true,                   // 开启科学公式TeX语言支持，默认关闭
+              flowChart: true,             // 开启流程图支持，默认关闭
+              sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
+              toolbarIcons : function() {  //自定义工具栏，后面有详细介绍
+                return editormd.toolbarModes['full']; // full, simple, mini
+              },
+	      onload : function() {
+                      console.log('onload', this);
+                      this.unwatch();
+              }
+
+          });
+          var testEditor2 = editormd("test-editormd2", {
+              width: "100%",
+              height: 260,
+              //autoHeight : true,
+              markdown : "",
+              path : '/editer.md/lib/',
+              imageUpload : true,
+              imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+              imageUploadURL : "/upload/picture",
+              htmlDecode : "style,script,iframe|on*",
+              emoji: true,
+              taskList: true, 
+              tocm: true,         // Using [TOCM]
+              tex: true,                   // 开启科学公式TeX语言支持，默认关闭
+              flowChart: true,             // 开启流程图支持，默认关闭
+              sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
+              toolbarIcons : function() {  //自定义工具栏，后面有详细介绍
+                return editormd.toolbarModes['full']; // full, simple, mini
+              },
+              onload : function() {
+                      console.log('onload', this);
+                      this.unwatch();
+              }
+          });
+          var testEditor3 = editormd("test-editormd3", {
+              width: "100%",
+              height: 260,
+              //autoHeight : true,
+              markdown : "",
+              path : '/editer.md/lib/',
+              imageUpload : true,
+              imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+              imageUploadURL : "/upload/picture",
+              htmlDecode : "style,script,iframe|on*",
+              emoji: true,
+              taskList: true, 
+              tocm: true,         // Using [TOCM]
+              tex: true,                   // 开启科学公式TeX语言支持，默认关闭
+              flowChart: true,             // 开启流程图支持，默认关闭
+              sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
+              toolbarIcons : function() {  //自定义工具栏，后面有详细介绍
+                return editormd.toolbarModes['full']; // full, simple, mini
+              },
+              onload : function() {
+                      console.log('onload', this);
+                      this.unwatch();
+              }
+          });
+          var testEditor4 = editormd("test-editormd4", {
+              width: "100%",
+              height: 380,
+              //autoHeight : true,
+              markdown : "",
+              path : '/editer.md/lib/',
+              imageUpload : true,
+              imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+              imageUploadURL : "/upload/picture",
+              htmlDecode : "style,script,iframe|on*",
+              emoji: true,
+              taskList: true, 
+              tocm: true,         // Using [TOCM]
+              tex: true,                   // 开启科学公式TeX语言支持，默认关闭
+              flowChart: true,             // 开启流程图支持，默认关闭
+              sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
+              toolbarIcons : function() {  //自定义工具栏，后面有详细介绍
+                return editormd.toolbarModes['mini']; // full, simple, mini
+              },
+              onload : function() {
+                      console.log('onload', this);
+                      this.unwatch();
+              }
+          });
+          var testEditor5 = editormd("test-editormd5", {
+              width: "100%",
+              height: 380,
+              //autoHeight : true,
+              markdown : "",
+              path : '/editer.md/lib/',
+              imageUpload : true,
+              imageFormats : ["jpg", "jpeg", "gif", "png", "bmp", "webp"],
+              imageUploadURL : "/upload/picture",
+              htmlDecode : "style,script,iframe|on*",
+              emoji: true,
+              taskList: true, 
+              tocm: true,         // Using [TOCM]
+              tex: true,                   // 开启科学公式TeX语言支持，默认关闭
+              flowChart: true,             // 开启流程图支持，默认关闭
+              sequenceDiagram: true,       // 开启时序/序列图支持，默认关闭,
+              toolbarIcons : function() {  //自定义工具栏，后面有详细介绍
+                return editormd.toolbarModes['full']; // full, simple, mini
+              },
+              onload : function() {
+                      console.log('onload', this);
+                      this.unwatch();
+              }
+          });
+      });
+   </script>   
+-->
 <style type="text/css">
   .problem_header{
     text-align: center;
@@ -7,6 +138,11 @@
 </style>
 <div class="padding">
     <form class="ui form" method="post" action="<%= syzoj.utils.makeUrl(['problem', req.params.id, 'edit']) %>">
+      <div style="margin-left: 10px; display: inline-block; ">
+        <a style="margin-left: 10px;" href="https://tool.lu/markdown" class="circular ui icon button"><i class="share square icon"></i> html转markdown</a>
+        <a style="margin-left: 10px;" href="/katex" class="circular ui icon button"><i class="edit icon"></i> markdown公式编辑器</a>
+        <a style="margin-left: 10px;" href="https://imgchr.com" class="circular ui icon button"><i class="print icon"></i> 图床</a>
+      </div>
       <div class="ui top attached tabular menu">
         <a class="item active" data-tab="edit">编辑</a>
         <a class="item" data-tab="preview" id="preview_tab">预览</a>
@@ -27,6 +163,7 @@
           <% } %>
           <label for="title">题目名称</label>
           <input class="font-content" type="text" id="title" name="title" value="<%= problem.title %>">
+          
           <label style="margin-top: 15px; " for="description">题目描述</label>
           <textarea class="markdown-edit" rows="15" id="description" name="description"><%= problem.description %></textarea>
           <label style="margin-top: 15px; " for="input_format">输入格式</label>
@@ -37,6 +174,32 @@
           <textarea class="markdown-edit" rows="15" id="example" name="example"><%= problem.example %></textarea>
           <label style="margin-top: 15px; ">数据范围与提示</label>
           <textarea class="markdown-edit" rows="10" id="hint" name="limit_and_hint"><%= problem.limit_and_hint %></textarea>
+	        <label style="margin-top: 15px; ">来源</label>
+          <textarea class="markdown-edit" rows="1" id="problem_source" name="problem_source"><%= problem.problem_source %></textarea>
+          <!--
+          <label style="margin-top: 15px; " for="description">题目描述</label>
+              <div class="font-content" id="test-editormd1">
+                  <textarea style="display:none;" id="description" name="description"><%= problem.description %></textarea>
+              </div>
+          <label style="margin-top: 15px; " for="input_format">输入格式</label>
+            <div class="font-content" id="test-editormd2">
+                <textarea style="display:none;" id="input" name="input_format"><%= problem.input_format %></textarea>
+            </div>
+          <label style="margin-top: 15px; " for="output_format">输出格式</label>
+            <div class="font-content" id="test-editormd3">
+                <textarea style="display:none;" id="output" name="output_format"><%= problem.output_format %></textarea>
+            </div>
+          <label style="margin-top: 15px; ">样例</label>
+            <div class="font-content" id="test-editormd4">
+                <textarea style="display:none;" id="example" name="example"><%= problem.example %></textarea>
+            </div>
+          <label style="margin-top: 15px; ">数据范围与提示</label>
+            <div class="font-content" id="test-editormd5">
+                <textarea style="display:none;" id="hint" name="limit_and_hint"><%= problem.limit_and_hint %></textarea>
+            </div>
+          <label style="margin-top: 15px; ">来源</label>
+          <textarea class="markdown-edit" rows="1" id="problem_source" name="problem_source"><%= problem.problem_source %></textarea>
+			-->
           <label style="margin-top: 15px; ">标签</label>
           <select class="ui fluid search dropdown" multiple="" id="search_tags" name="tags">
             <% for (let tag of problem.tags) { %>

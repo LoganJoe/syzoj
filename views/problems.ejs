@@ -7,7 +7,7 @@ if (typeof tags !== 'undefined') tagIDs = tags.map(x => x.id);
 <div class="padding">
   <div class="ui grid" style="margin-bottom: 10px; ">
     <div class="row" style="white-space: nowrap; ">
-      <div class="seven wide column">
+      <div class="six wide column">
         <% if (typeof tags !== 'undefined') { %>
           <%
           tags.sort((a, b) => {
@@ -25,7 +25,7 @@ if (typeof tags !== 'undefined') tagIDs = tags.map(x => x.id);
           <form action="<%= syzoj.utils.makeUrl(['problems', 'search']) %>" method="get">
             <div class="ui search" style="width: 280px; height: 28px; margin-top: -5.3px; ">
               <div class="ui left icon input" style="width: 100%; ">
-                <input class="prompt" style="width: 100%; " type="text" value="<%= req.query.keyword %>" placeholder="ID / 题目名 …" name="keyword">
+                <input class="prompt" style="width: 100%; " type="text" value="<%= req.query.keyword %>" placeholder="ID / 题目名 / 来源 …" name="keyword">
                 <i class="search icon"></i>
               </div>
               <div class="results" style="width: 100%; "></div>
@@ -34,7 +34,7 @@ if (typeof tags !== 'undefined') tagIDs = tags.map(x => x.id);
         <% } %>
       </div>
       <div class="nine wide right aligned column">
-        <div class="ui toggle checkbox" id="show_tag">
+        <div class="ui small toggle checkbox" id="show_tag" style="margin-left: 10px;">
           <style id="show_tag_style"></style>
           <script>
           if (localStorage.getItem('show_tag') === '1') {
@@ -61,10 +61,39 @@ if (typeof tags !== 'undefined') tagIDs = tags.map(x => x.id);
           </script>
           <label>显示分类标签</label>
         </div>
+        <div class="ui small toggle checkbox" id="show_source" style="margin-left: 10px;">
+          <style id="show_source_style"></style>
+          <script>
+          if (localStorage.getItem('show_source') === '1') {
+            document.write('<input type="checkbox" checked>');
+            document.getElementById('show_source_style').innerHTML = '.show_source_controled { white-space: nowrap; overflow: hidden; }';
+          } else {
+            document.write('<input type="checkbox">');
+            document.getElementById('show_source_style').innerHTML = '.show_source_controled { width: 0; white-space: nowrap; overflow: hidden; }';
+          }
+          </script>
+          <script>
+          $(function () {
+            $('#show_source').checkbox('setting', 'onChange', function () {
+              let checked = $('#show_source').checkbox('is checked');
+              localStorage.setItem('show_source', checked ? '1' : '0');
+              if (checked) {
+                document.getElementById('show_source_style').innerHTML = '.show_source_controled { white-space: nowrap; overflow: hidden; }';
+              } else {
+                document.getElementById('show_source_style').innerHTML = '.show_source_controled { width: 0; white-space: nowrap; overflow: hidden; }';
+              }
+            });
+          });
+          </script>
+          <label>显示来源</label>
+        </div>
+
         <div style="margin-left: 10px; display: inline-block; ">
           <% if (allowedManageTag) { %>
             <% if (typeof tags !== 'undefined' && tags.length === 1) { %>
               <a style="margin-left: 10px; " href="<%= syzoj.utils.makeUrl(['problems', 'tag', tags[0].id, 'edit']) %>" class="ui labeled icon mini blue button"><i class="write icon"></i> 编辑标签</a>
+            <% } else { %>
+              <a style="margin-left: 10px; " href="<%= syzoj.utils.makeUrl(['article', '8']) %>" class="ui labeled icon mini blue button"><i class="file outline icon"></i> 标签总览</a>
             <% } %>
             <a style="margin-left: 10px; " href="<%= syzoj.utils.makeUrl(['problems', 'tag', 0, 'edit']) %>" class="ui labeled icon mini green button"><i class="plus icon"></i> 添加标签</a>
           <% } %>
@@ -116,8 +145,18 @@ if (typeof tags !== 'undefined') tagIDs = tags.map(x => x.id);
             <td><b><%= problem.id %></b></td>
             <td class="left aligned">
               <a style="vertical-align: middle; " href="<%= syzoj.utils.makeUrl(['problem', problem.id]) %>"><%= problem.title %>
-                <% if (!problem.is_public) { %><span class="ui header"><span class="ui tiny red label">未公开</span></span><% } %>
+              <% if (!problem.is_public) { %>
+                <span class="ui header"><a class="ui tiny red label" >未公开</a></span>
+              <% } %>
               </a>
+
+              <% if (problem.problem_source) { %>
+              <div class="show_source_controled" style="float: right; "> 
+                <span class="ui header"> 
+                  <a href="<%= syzoj.utils.makeUrl(['problems/search?keyword='+ problem.problem_source]) %>" class = "ui basic tiny label" > <%= problem.problem_source %> </a> 
+                </span> 
+              </div>
+              <% }%>
               <div class="show_tag_controled" style="float: right; ">
                 <%
                 if (problem.tags) {

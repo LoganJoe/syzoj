@@ -18,7 +18,7 @@
     <input type="hidden" name="contest" value="<%= form.contest %>" />
     <div class="inline fields" style="margin-bottom: 25px; white-space: nowrap; ">
       <label style="font-size: 1.2em; margin-right: 1px; ">题目：</label>
-      <div class="field"><input name="problem_id" style="width: 50px; " type="text" value="<%= form.problem_id %>"></div>
+      <div class="field"><input name="problem_id" style="width: 75px; " type="text" value="<%= form.problem_id %>"></div>
       <% if (displayConfig.showOthers) { %>
         <label style="font-size: 1.2em; margin-right: 1px; ">提交者：</label>
         <div class="field"><input name="submitter" style="width: 100px; " type="text" value="<%= form.submitter %>"></div>
@@ -132,7 +132,6 @@ $(function () {
 const itemList = <%- serializejs(items) %>;
 const socketUrl = "/rough";
 const displayConfig = <%- serializejs(displayConfig) %>;
-
 const vueApp = new Vue({
   el: '#vueAppFuckSafari',
   data: {
@@ -140,7 +139,6 @@ const vueApp = new Vue({
     displayConfig: displayConfig
   },
 });
-
 if (itemList.some(function(t) {return t.token != null;})) {
   const socket = io(socketUrl);
   socket.on('connect', function () {
@@ -149,7 +147,6 @@ if (itemList.some(function(t) {return t.token != null;})) {
       socket.on('start', function (data) {
         getItem(data.taskId).running = true;
       });
-
       socket.on('finish', function (data) {
         getItem(data.taskId).running = false;
         getItem(data.taskId).result = data.result;
@@ -157,7 +154,6 @@ if (itemList.some(function(t) {return t.token != null;})) {
           socket.close();
         }
       });
-
       socket.emit('join', x.token, function (data) {
         if (data && data.ok) {
           if (data.running) {

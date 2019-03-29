@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh">
+    <head>
+        <meta charset="utf-8" />
+        <title>Markdown 公式编辑器</title>
+        <link rel="stylesheet" href="css/style.css" />
+        <link href="/editer.md/css/editormd.css" rel="stylesheet">
+        <link rel="shortcut icon" href="https://pandao.github.io/editor.md/favicon.ico" type="image/x-icon" />
+    </head>
+    <body>
+        <div id="layout">
+            <header>
+                <h1>Tex 科学公式语言 (TeX/LaTeX)</h1>
+				<p>Based on KaTeX.js：<a href="http://khan.github.io/KaTeX/" target="_blank">http://khan.github.io/KaTeX/</a></p>
+                <br/>
+                <p><a href="https://jsperf.com/katex-vs-mathjax" target="_blank">KaTeX vs MathJax</a></p>   
+            </header>
+            <div id="test-editormd">                
+                <textarea style="display:none;"></textarea>
+            </div>
+        </div>
+        
+           <script src="/editer.md/jquery.min.js"></script>
+    <script src="/editer.md/editormd.min.js"></script> 
+        <script type="text/javascript">
+            $(function() {
+                var testEditor = editormd("test-editormd", {
+                    width: "90%",
+                    height: 880,
+                    path : '/editer.md/lib/',
+                    tex  : true
+                });
+            });
+        </script>
+    </body>
+</html>

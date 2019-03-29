@@ -50,7 +50,7 @@
               let width = syzoj.config.logo.width ? syzoj.config.logo.width + 'px' : 'auto';
               let height = syzoj.config.logo.height ? syzoj.config.logo.height + 'px' : 'auto';
             %>
-            <a class="header item" href="/"><img src="<%= syzoj.config.logo.url %>" style="width: <%= width %>; height: <%= height %>; "></a>
+            <a class="header item" href="/"><img src="<%= syzoj.config.logo.url %>" style="width: <%= width %>; height: <%= height %>; "><span style="margin-left: 10px; font-family: 'Exo 2'; font-size: 1.5em; font-weight: 600; "><%= syzoj.config.title %></span></a>
             <% } else { %>
             <a class="header item" href="/"><span style="font-family: 'Exo 2'; font-size: 1.5em; font-weight: 600; "><%= syzoj.config.title %></span></a>
             <% } %>
@@ -60,7 +60,19 @@
             <a class="item<% if (active.startsWith('submission')) { %> active<% } %>" href="/submissions"><i class="tasks icon"></i> 评测</a>
             <a class="item<% if (active.startsWith('ranklist')) { %> active<% } %>" href="/ranklist"><i class="signal icon"></i> 排名</a>
             <a class="item<% if (active.startsWith('discussion') || active.startsWith('article')) { %> active<% } %>" href="/discussion/global"><i class="comments icon"></i> 讨论</a>
-            <a class="item<% if (active.startsWith('help')) { %> active<% } %>" href="/help"><i class="help circle icon"></i> 帮助</a>
+			<div class="left menu">
+				
+				<div class="ui simple dropdown item">
+					<a style="color: inherit; ">其他<i class="dropdown icon"></i></a>
+                <div class="menu">
+                    <a class="item" href="/todo"><i class="star icon"></i> ToDo</a>
+                    <a class="item" href="http://10.110.182.1:81/home"><i class="rocketchat icon"></i> 聊天</a>
+                    <a class="item" href="/graph_editor"><i class="edit outline icon"></i> 制图</a>
+                    <a class="item" href="https://www.geogebra.org/graphing"><i class="crop icon"></i> 画板</a>
+                    <a class="item" href="/help"><i class="help circle icon"></i> 帮助</a>
+                </div>
+				</div>
+            </div>
             <% if (typeof contest !== 'undefined' && contest && contest.id) { %>
               <a id="back_to_contest" class="item" href="<%= syzoj.utils.makeUrl(['contest', contest.id]) %>"><i class="arrow left icon"></i> 返回比赛</a>
             <% } %>
@@ -73,6 +85,7 @@
                   <a class="item" href="<%= syzoj.utils.makeUrl(['user', user.id, 'edit']) %>"><i class="edit icon"></i>修改资料</a>
                   <% if (user.is_admin) { %>
                     <a class="item" href="<%= syzoj.utils.makeUrl(['admin', 'info']) %>"><i class="settings icon"></i>后台管理</a>
+                    <a class="item" href-post="<%= syzoj.utils.makeUrl(['admin', 'restart'], { url: req.query['url'] || req.originalUrl }) %>"><i class="redo icon"></i>重启服务</a>
                   <% } %>
                   <a class="item" href-post="<%= syzoj.utils.makeUrl(['logout'], { url: req.originalUrl }) %>"><i class="power icon"></i>注销</a>
                 </div>
@@ -80,10 +93,10 @@
               </a>
                 <% } else { %>
                 <div class="item">
-                    <a class="ui button" style="margin-right: 0.5em; " href="<%= syzoj.utils.makeUrl(['login'], { url: this.noPreserveUrl ? undefined : req.originalUrl }) %>">
+                    <a class="ui button" style="margin-right: 0.5em; " href="<%= syzoj.utils.makeUrl(['login'], { url: req.query['url'] || req.originalUrl }) %>">
                         登录
                     </a>
-                    <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['sign_up'], { url: this.noPreserveUrl ? undefined : req.originalUrl }) %>">
+                    <a class="ui primary button" href="<%= syzoj.utils.makeUrl(['sign_up'], { url: req.query['url'] || req.originalUrl }) %>">
                         注册
                     </a>
                 </div>

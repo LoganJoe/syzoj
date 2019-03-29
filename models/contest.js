@@ -5,6 +5,8 @@ let User = syzoj.model('user');
 let Problem = syzoj.model('problem');
 let ContestRanklist = syzoj.model('contest_ranklist');
 let ContestPlayer = syzoj.model('contest_player');
+let ContestRanklist2 = syzoj.model('contest_ranklist2');
+let ContestPlayer2 = syzoj.model('contest_player2');
 
 let model = db.define('contest', {
   id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
@@ -36,7 +38,8 @@ let model = db.define('contest', {
   },
 
   is_public: { type: Sequelize.BOOLEAN },
-  hide_statistics: { type: Sequelize.BOOLEAN }
+  hide_statistics: { type: Sequelize.BOOLEAN },
+  assort: { type: Sequelize.INTEGER }
 }, {
     timestamps: false,
     tableName: 'contest',
@@ -65,13 +68,15 @@ class Contest extends Model {
       holder: 0,
       ranklist_id: 0,
       is_public: false,
-      hide_statistics: false
+      hide_statistics: false,
+      assort: 0
     }, val)));
   }
 
   async loadRelationships() {
     this.holder = await User.fromID(this.holder_id);
     this.ranklist = await ContestRanklist.fromID(this.ranklist_id);
+	this.ranklist2 = await ContestRanklist2.fromID(this.ranklist_id);
   }
 
   async isSupervisior(user) {
@@ -118,7 +123,11 @@ class Contest extends Model {
   }
 
   async newSubmission(judge_state) {
-    if (!(judge_state.submit_time >= this.start_time && judge_state.submit_time <= this.end_time)) {
+    if (!(judge_state.submit_time >= this.start_time && judge_state.submit_time <= this.end_time) && !(judge_state.submit_time >= this.start_time && this.type === 'noi')) {
+      return;
+    }
+	//
+if (!(judge_state.submit_time >= this.start_time && judge_state.submit_time <= this.end_time)) {
       return;
     }
     let problems = await this.getProblems();
@@ -143,6 +152,29 @@ class Contest extends Model {
       await this.loadRelationships();
       await this.ranklist.updatePlayer(this, player);
       await this.ranklist.save();
+/*
+	  if (judge_state.submit_time >= this.start_time && this.type === 'noi')
+		{
+			  let player2 = await ContestPlayer2.findInContest({
+				contest_id: this.id,
+				user_id: judge_state.user_id
+			  });
+
+			  if (!player2) {
+				player2 = await ContestPlayer2.create({
+				  contest_id: this.id,
+				  user_id: judge_state.user_id
+				});
+			  }
+
+			  await player2.updateScore(judge_state);
+			  await player2.save();
+
+			  await this.loadRelationships();
+			  await this.ranklist2.updatePlayer(this, player);
+			  await this.ranklist2.save();
+		}
+*/
     });
   }
 
@@ -150,7 +182,10 @@ class Contest extends Model {
     if (!now) now = syzoj.utils.getCurrentDate();
     return now >= this.start_time && now < this.end_time;
   }
-
+  isStart(now) {
+    if (!now) now = syzoj.utils.getCurrentDate();
+    return now >= this.start_time;
+  }
   isEnded(now) {
     if (!now) now = syzoj.utils.getCurrentDate();
     return now >= this.end_time;

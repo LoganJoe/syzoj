@@ -36,9 +36,11 @@ const getRoughResult = (x, displayConfig, roughOnly) => {
         // 0: Waiting 1: Running
         if (x.status === "System Error")
             return { result: "System Error" };
-        if (x.compilation == null || [0, 1].includes(x.compilation.status)) {
+        if (x.compilation == null/* || [0, 1].includes(x.compilation.status)*/) {
             return null;
         } else {
+            if(x.compilation.status === 0) return { result: "Waiting" };
+            if(x.compilation.status === 1) return { result: "Running" };
             if (x.compilation.status === 2) { // 2 is TaskStatus.Done
                 return { result: "Submitted" };
             } else {

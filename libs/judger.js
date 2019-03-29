@@ -4,7 +4,7 @@ const enums = require('./enums'),
 
 const amqp = require('amqplib');
 const util = require('util');
-const winston = require('winston');
+const winston = require('winston'); 
 const msgPack = require('msgpack-lite');
 const interface = require('./judger_interfaces');
 const judgeResult = require('./judgeResult');
