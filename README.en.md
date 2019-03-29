@@ -42,5 +42,11 @@ ALTER TABLE `problem` ADD `publicize_time` DATETIME NOT NULL DEFAULT CURRENT_TIM
 Who upgraded from a commit BEFORE [d8be150fc6b8c43af61c5e4aca4fc0fe0445aef3](https://github.com/syzoj/syzoj/commit/d8be150fc6b8c43af61c5e4aca4fc0fe0445aef3) (Dec 7, 2018) **MUST** perform the following SQL on the database.
 
 ```sql
-ALTER TABLE `user` ADD `prefer_formatted_code` TINYINT(1) NOT NULL AFTER `public_email`;
+ALTER TABLE `user` ADD `prefer_formatted_code` TINYINT(1) NOT NULL DEFAULT 1 AFTER `public_email`;
 ```
+
+To make code formatting work, `clang-format` needs to be installed. [migrates/format-old-codes.js](migrates/format-old-codes.js) may help formating old submissions' codes.
+
+Who upgraded from a commit BEFORE [c192e8001ac81cab132ae033b39f09a094587633](https://github.com/syzoj/syzoj/commit/c192e8001ac81cab132ae033b39f09a094587633) (Mar 23, 2019) **MUST** install `redis-server` and [pygments](http://pygments.org/) on the web server. Markdown contents may be broken by switching to new renderer, [migrates/html-table-merge-cell-to-md.js](migrates/html-table-merge-cell-to-md.js) may help the migration。
+
+Who upgraded from a commit BEFORE [7b03706821c604f59fe8263286203d57d634c421](https://github.com/syzoj/syzoj/commit/c192e8001ac81cab132ae033b39f09a094587633) (Mar 27, 2019) **MUST** add `RemainAfterExit=yes` to the systemd config file `syzoj-web.service`'s `[Service]` section to make sure that restart service can work properly.

@@ -198,7 +198,7 @@ if (!res.locals.user) throw new ErrorMessage('请登录后继续。', { '登录'
       roughResult: getRoughResult(judge, displayConfig, false),
       code: (judge.problem.type !== 'submit-answer') ? judge.code.toString("utf8") : '',
       formattedCode: judge.formattedCode ? judge.formattedCode.toString("utf8") : null,
-      preferFormattedCode: res.locals.user ? res.locals.user.prefer_formatted_code : false,
+      preferFormattedCode: res.locals.user ? res.locals.user.prefer_formatted_code : true,
       detailResult: processOverallResult(judge.result, displayConfig),
       socketToken: (judge.pending && judge.task_id != null) ? jwt.sign({
         taskId: judge.task_id,
